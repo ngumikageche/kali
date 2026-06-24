@@ -1,0 +1,70 @@
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import ResponsiveImage from "../ui/ResponsiveImage.jsx";
+
+const slides = [
+  {
+    title: "PHANTOM SERIES - GEAR UP. MOVE SMART.",
+    copy: "Built for the Field. Worn in the City. Premium tactical gear for Nairobi and East Africa.",
+    image: "https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=1600&q=80"
+  },
+  {
+    title: "FATHER'S DAY - GIFT THE FIELD-READY DAD",
+    copy: "Gift bundles with up to 25% off selected boots, trousers, and jackets.",
+    image: "https://images.unsplash.com/photo-1520975916090-3105956dac38?auto=format&fit=crop&w=1600&q=80"
+  },
+  {
+    title: "NEW DROP - ALL-BLACK COLLECTION NOW LIVE",
+    copy: "Dark military-luxury staples built around stealth palettes, ripstop fabrics, and everyday carry.",
+    image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80"
+  }
+];
+
+export default function HeroBanner({ slides: externalSlides = slides, companyName = "KALITACTICAL" }) {
+  const resolvedSlides = externalSlides.length ? externalSlides : slides;
+  const [active, setActive] = useState(0);
+  useEffect(() => {
+    setActive(0);
+  }, [resolvedSlides.length]);
+  useEffect(() => {
+    const timer = window.setInterval(() => setActive((index) => (index + 1) % resolvedSlides.length), 5000);
+    return () => window.clearInterval(timer);
+  }, [resolvedSlides.length]);
+
+  const move = (step) => setActive((index) => (index + step + resolvedSlides.length) % resolvedSlides.length);
+  const slide = resolvedSlides[active];
+
+  return (
+    <section className="hero">
+      <div className="hero-media" aria-hidden="true">
+        <ResponsiveImage
+          src={slide.image}
+          alt=""
+          width={1600}
+          height={1200}
+          sizes="100vw"
+          priority={active === 0}
+          fill
+        />
+      </div>
+      <div className="hero-overlay" />
+      <div className="container hero-content">
+        <p className="eyebrow">{companyName}</p>
+        <h1>{slide.title}</h1>
+        <p>{slide.copy}</p>
+        <div className="hero-actions">
+          <Link className="btn btn-primary" to="/category/shop">SHOP NOW</Link>
+          <Link className="btn btn-secondary" to="/category/new-arrivals">VIEW COLLECTION</Link>
+        </div>
+      </div>
+      <button className="hero-arrow hero-prev" onClick={() => move(-1)} aria-label="Previous slide"><ChevronLeft /></button>
+      <button className="hero-arrow hero-next" onClick={() => move(1)} aria-label="Next slide"><ChevronRight /></button>
+      <div className="hero-dots">
+        {resolvedSlides.map((item, index) => (
+          <button key={item.title} className={index === active ? "active" : ""} onClick={() => setActive(index)} aria-label={`Show ${item.title}`} />
+        ))}
+      </div>
+    </section>
+  );
+}

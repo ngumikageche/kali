@@ -1,0 +1,23 @@
+:root {
+  --kali-black: #0d0d0d;
+  --kali-charcoal: #1c1c1e;
+  --kali-olive: #3b4a2f;
+  --kali-brass: #b8952a;
+  --kali-sand: #c9b99a;
+  --kali-off-white: #f0ece4;
+  --kali-red: #9b2335;
+  --kali-mid-gray: #2e2e2e;
+  --primary: var(--kali-olive);
+  --accent: var(--kali-brass);
+  --dark: var(--kali-black);
+  --mid: #bdb6aa;
+  --light: var(--kali-black);
+  --paper: var(--kali-charcoal);
+  --danger: var(--kali-red);
+  --success: #5f8f4e;
+  --line: rgba(201, 185, 154, 0.24);
+  --shadow: 0 18px 42px rgba(0, 0, 0, 0.4);
+  --display: "Barlow Condensed", Impact, sans-serif;
+  --body: "Inter", system-ui, sans-serif;
+  --utility: "Roboto Mono", monospace;
+}
