@@ -46,23 +46,41 @@ function normalizeSpecifications(product) {
 
 export function normalizeProduct(product = {}) {
   const canonicalSlug = readSlugFromCanonicalUrl(product.canonical_url);
-  const slug = product.slug || canonicalSlug || slugify(product.name);
+  const publicSlug = product.slug || canonicalSlug || "";
+  const slug = publicSlug || slugify(product.name);
   const categorySlug = product.category_slug || slugify(product.category_name || product.category);
   const subcategorySlug = product.subcategory_slug || slugify(product.subcategory_name || product.subcategory);
   const gallery = coerceArray(product.image_urls).length
     ? coerceArray(product.image_urls)
     : coerceArray(product.images).map((image) => image?.url).filter(Boolean);
   const primaryImage = pickPrimaryImage(product);
+  const stockQuantity = product.stock_quantity != null
+    ? Number(product.stock_quantity)
+    : product.quantity != null
+      ? Number(product.quantity)
+      : product.inventory_count != null
+        ? Number(product.inventory_count)
+        : null;
+  const isInStock = typeof product.is_in_stock === "boolean"
+    ? product.is_in_stock
+    : typeof product.in_stock === "boolean"
+      ? product.in_stock
+      : Number.isFinite(stockQuantity)
+        ? stockQuantity > 0
+        : true;
 
   return {
     ...product,
     id: product.id,
     slug,
-    routeKey: slug || String(product.id),
-    canonicalUrl: product.canonical_url || (slug ? `/products/${slug}` : ""),
+    publicSlug,
+    routeKey: publicSlug || String(product.id),
+    productHref: publicSlug ? `/products/${publicSlug}` : `/product/${product.id}`,
+    canonicalUrl: product.canonical_url || (publicSlug ? `/products/${publicSlug}` : product.id != null ? `/product/${product.id}` : ""),
     name: product.name || "Untitled product",
     shortName: product.short_name || product.name || "Untitled product",
     brand: product.brand || "",
+    sku: product.sku || product.product_code || product.code || "",
     category: categorySlug,
     categoryName: product.category_name || product.category || "Shop",
     subcategory: subcategorySlug,
@@ -89,6 +107,8 @@ export function normalizeProduct(product = {}) {
     ingredients: product.ingredients_or_contents || "",
     additionalInformation: product.additional_information || "",
     requiresPrescription: Boolean(product.requires_prescription),
+    stockQuantity,
+    isInStock,
     isBestSeller: Boolean(product.is_best_seller),
     currency: product.currency || "KES"
   };
@@ -112,12 +132,18 @@ export function normalizeCategory(category = {}) {
 }
 
 export function normalizeCarouselItem(item = {}) {
+  const title = item.caption || item.title || item.headline || item.name || "Featured";
+  const copy = item.description || item.copy || item.subcaption || item.caption || "";
+  const image = item.image_url || item.image || item.desktop_image_url || item.banner_image_url || item.photo_url || "";
+  const href = item.link || item.href || item.button_link || (item.category_id ? `/category/${item.category_id}` : "/category/shop");
+
   return {
     ...item,
-    title: item.caption || item.title || "Featured",
-    copy: item.caption || "",
-    image: item.image_url || "",
-    href: item.link || (item.category_id ? `/category/${item.category_id}` : "/category/shop")
+    title,
+    copy,
+    image,
+    href,
+    actionLabel: item.button_text || item.cta_label || item.action_label || "Explore"
   };
 }
 

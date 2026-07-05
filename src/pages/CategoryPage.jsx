@@ -1,8 +1,11 @@
-import { Clock, Mail, MapPin, MessageCircle, Phone, ShieldCheck, Truck, UsersRound } from "lucide-react";
+import { CheckCheck, Clock, Mail, MapPin, MessageCircle, Phone, ShieldCheck, Truck, UsersRound } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
+import LoadingState from "../components/ui/LoadingState.jsx";
 import ProductCard from "../components/ui/ProductCard.jsx";
 import StorefrontState from "../components/ui/StorefrontState.jsx";
 import { storefrontConfig } from "../config/storefront.js";
+import { useCart } from "../context/CartContext.jsx";
 import { useStorefront } from "../context/StorefrontContext.jsx";
 import { useAsyncData } from "../hooks/useAsyncData.js";
 import { storefrontApi } from "../lib/storefrontApi.js";
@@ -15,6 +18,7 @@ export default function CategoryPage() {
 
   if (slug === "about") return <AboutPage stores={stores} />;
   if (slug === "contact") return <ContactPage stores={stores} />;
+  if (slug === "account") return <AccountPage />;
 
   const isUtilityPage = ["shop", "sale", "cart", "delivery", "returns", "sizing", "payment", "account"].includes(slug);
   const search = searchParams.get("q") || "";
@@ -45,9 +49,9 @@ export default function CategoryPage() {
       <div className="section-heading">
         <p className="eyebrow">KALITACTICAL</p>
         <h1>{data.category?.name || title(slug)}</h1>
-        <p>{search ? `Results for "${search}"` : data.category?.description || "Live products loaded from the public storefront API."}</p>
+        <p>{search ? `Results for "${search}"` : data.category?.description || "Browse the latest arrivals, essentials, and tactical favorites."}</p>
       </div>
-      {loading && !data.products.length ? <StorefrontState title="Loading category" body="Fetching catalog results from `/public/products`." /> : null}
+      {loading && !data.products.length ? <LoadingState title="Loading products..." /> : null}
       {error ? <StorefrontState title="Category unavailable" body={error.message} tone="error" /> : null}
       {!loading && !error && !data.products.length ? <StorefrontState title="No products found" body="This category currently has no active public products." /> : null}
       {data.products.length ? <div className="catalog-grid">{data.products.map((product) => <ProductCard key={product.id} product={product} />)}</div> : null}
@@ -162,4 +166,215 @@ function ContactPage({ stores = [] }) {
       </div>
     </section>
   );
+}
+
+function AccountPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { customerProfile, saveCustomerProfile, trackedOrders = [] } = useCart();
+  const [orderReference, setOrderReference] = useState(searchParams.get("order") || "");
+  const [contact, setContact] = useState("");
+  const [lookupError, setLookupError] = useState("");
+  const [profileState, setProfileState] = useState(() => ({
+    name: customerProfile?.name || "",
+    email: customerProfile?.email || "",
+    phone: customerProfile?.phone || "",
+    address: customerProfile?.address || "",
+    city: customerProfile?.city || ""
+  }));
+  const [profileSaved, setProfileSaved] = useState(false);
+  const selectedReference = searchParams.get("order") || orderReference;
+  const activeOrder = useMemo(
+    () => findOrder(trackedOrders, selectedReference, contact),
+    [contact, selectedReference, trackedOrders]
+  );
+  const progressStages = activeOrder ? getOrderProgress(activeOrder) : [];
+
+  function handleProfileSubmit(event) {
+    event.preventDefault();
+    saveCustomerProfile(profileState);
+    setProfileSaved(true);
+    window.setTimeout(() => setProfileSaved(false), 2200);
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    const matchedOrder = findOrder(trackedOrders, orderReference, contact);
+
+    if (!matchedOrder) {
+      setLookupError("We could not find an order matching those details yet.");
+      return;
+    }
+
+    setLookupError("");
+    setSearchParams({ order: matchedOrder.reference });
+  }
+
+  return (
+    <section className="section container info-page order-tracker-page">
+      <div className="section-heading">
+        <div>
+          <p className="eyebrow">Order Tracking</p>
+          <h1>Track your order</h1>
+        </div>
+        <p>Enter your order number and the phone or email used at checkout to see the current progress.</p>
+      </div>
+
+      <div className="order-tracker-layout">
+        <div className="account-sidebar">
+          <form className="contact-form order-tracker-form" onSubmit={handleProfileSubmit}>
+            <h2>Your profile</h2>
+            <label>Name<input value={profileState.name} onChange={(event) => setProfileState((current) => ({ ...current, name: event.target.value }))} placeholder="Your full name" /></label>
+            <label>Email<input value={profileState.email} onChange={(event) => setProfileState((current) => ({ ...current, email: event.target.value }))} placeholder="you@example.com" /></label>
+            <label>Phone<input value={profileState.phone} onChange={(event) => setProfileState((current) => ({ ...current, phone: event.target.value }))} placeholder="+254..." /></label>
+            <label>Address<input value={profileState.address} onChange={(event) => setProfileState((current) => ({ ...current, address: event.target.value }))} placeholder="Street address" /></label>
+            <label>City<input value={profileState.city} onChange={(event) => setProfileState((current) => ({ ...current, city: event.target.value }))} placeholder="Nairobi" /></label>
+            <button className="btn btn-primary" type="submit">SAVE PROFILE</button>
+            {profileSaved ? <StorefrontState title="Profile saved" body="Your checkout and tracking details are updated." /> : null}
+          </form>
+
+          <form className="contact-form order-tracker-form" onSubmit={handleSubmit}>
+            <h2>Find your order</h2>
+            <label>Order number<input value={orderReference} onChange={(event) => setOrderReference(event.target.value)} placeholder="KT-ABC123" required /></label>
+            <label>Email or phone<input value={contact} onChange={(event) => setContact(event.target.value)} placeholder="you@example.com / +254..." /></label>
+            <button className="btn btn-primary" type="submit">TRACK ORDER</button>
+            {lookupError ? <StorefrontState title="Order not found" body={lookupError} tone="error" /> : null}
+            {!trackedOrders.length ? <StorefrontState title="No recent orders yet" body="Place an order from the cart and it will appear here with its progress timeline." /> : null}
+          </form>
+        </div>
+
+        <div className="order-tracker-panel">
+          <section className="tracked-order-card account-profile-card">
+            <div className="tracked-order-header">
+              <div>
+                <p className="eyebrow">Account</p>
+                <h2>{profileState.name || "Customer profile"}</h2>
+              </div>
+              <div className="tracked-order-total">
+                <span>Saved orders</span>
+                <strong>{trackedOrders.length}</strong>
+              </div>
+            </div>
+            <div className="profile-facts">
+              <article><span>Email</span><strong>{profileState.email || "Not set"}</strong></article>
+              <article><span>Phone</span><strong>{profileState.phone || "Not set"}</strong></article>
+              <article><span>Address</span><strong>{profileState.address || "Not set"}</strong></article>
+              <article><span>City</span><strong>{profileState.city || "Not set"}</strong></article>
+            </div>
+          </section>
+
+          {trackedOrders.length ? (
+            <section className="recent-orders">
+              <h2>Recent orders</h2>
+              <div className="recent-order-list">
+                {trackedOrders.slice(0, 4).map((order) => (
+                  <button
+                    className={`recent-order-card ${activeOrder?.reference === order.reference ? "active" : ""}`}
+                    key={order.reference}
+                    type="button"
+                    onClick={() => {
+                      setOrderReference(order.reference);
+                      setContact(order.customer?.contact || "");
+                      setLookupError("");
+                      setSearchParams({ order: order.reference });
+                    }}
+                  >
+                    <strong>{order.reference}</strong>
+                    <span>{order.customer?.name || "Customer"}</span>
+                    <span>{formatProgressLabel(order.status)}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {activeOrder ? (
+            <section className="tracked-order-card">
+              <div className="tracked-order-header">
+                <div>
+                  <p className="eyebrow">Order {activeOrder.reference}</p>
+                  <h2>{formatProgressLabel(activeOrder.status)}</h2>
+                </div>
+                <div className="tracked-order-total">
+                  <span>Total</span>
+                  <strong>KSh {activeOrder.total.toLocaleString("en-KE")}</strong>
+                </div>
+              </div>
+              <p className="tracked-order-meta">
+                Placed {formatOrderDate(activeOrder.createdAt)}. Estimated delivery: {activeOrder.estimatedDelivery}.
+              </p>
+              <div className="order-progress">
+                {progressStages.map((stage, index) => (
+                  <article className={`order-progress-step ${stage.state}`} key={stage.label}>
+                    <div className="order-progress-marker">
+                      {stage.state === "complete" ? <CheckCheck size={16} /> : stage.state === "current" ? <Truck size={16} /> : <Clock size={16} />}
+                    </div>
+                    <div>
+                      <strong>{stage.label}</strong>
+                      <p>{stage.copy}</p>
+                    </div>
+                    {index < progressStages.length - 1 ? <span className="order-progress-line" /> : null}
+                  </article>
+                ))}
+              </div>
+              <div className="tracked-order-items">
+                <h3>Items in this order</h3>
+                {activeOrder.items.map((item) => (
+                  <article className="tracked-order-item" key={item.key}>
+                    <div>
+                      <strong>{item.product.shortName || item.product.name}</strong>
+                      <span>{item.options.size || "Standard"} / {item.options.color || "Default"} / Qty {item.quantity}</span>
+                    </div>
+                    <b>KSh {(item.product.price * item.quantity).toLocaleString("en-KE")}</b>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ) : trackedOrders.length ? <StorefrontState title="Select an order" body="Choose a recent order or search by order number above." /> : null}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function findOrder(orders = [], reference = "", contact = "") {
+  const normalizedReference = reference.trim().toLowerCase();
+  const normalizedContact = contact.trim().toLowerCase();
+
+  return orders.find((order) => {
+    const referenceMatches = normalizedReference ? order.reference?.toLowerCase() === normalizedReference : true;
+    const contactMatches = normalizedContact ? String(order.customer?.contact || "").toLowerCase() === normalizedContact : true;
+    return referenceMatches && contactMatches;
+  }) || null;
+}
+
+function getOrderProgress(order) {
+  const stageIndex = Number(order.statusIndex || 0);
+  const stages = [
+    ["Order placed", "We received your order details successfully."],
+    ["Confirmed", "Your checkout details and delivery information are confirmed."],
+    ["Packed", "Your kit is being packed and prepared for dispatch."],
+    ["Out for delivery", "Your order is on the move and heading to you."],
+    ["Delivered", "The order has been delivered successfully."]
+  ];
+
+  return stages.map(([label, copy], index) => ({
+    label,
+    copy,
+    state: index < stageIndex ? "complete" : index === stageIndex ? "current" : "upcoming"
+  }));
+}
+
+function formatProgressLabel(status = "") {
+  return String(status || "processing")
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function formatOrderDate(value) {
+  try {
+    return new Date(value).toLocaleString("en-KE", { dateStyle: "medium", timeStyle: "short" });
+  } catch {
+    return value;
+  }
 }

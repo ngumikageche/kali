@@ -8,7 +8,9 @@ import StarRating from "./StarRating.jsx";
 
 export default function ProductCard({ product, compact = false }) {
   const { addToCart } = useCart();
-  const productHref = `/products/${product.routeKey || product.slug || product.id}`;
+  const productHref = product.productHref || (product.publicSlug ? `/products/${product.publicSlug}` : `/product/${product.id}`);
+  const productLabel = product.brand || product.categoryName || "Product";
+
   return (
     <article className={`product-card ${compact ? "product-card-compact" : ""}`}>
       <Link to={productHref} className="product-media">
@@ -22,6 +24,7 @@ export default function ProductCard({ product, compact = false }) {
         {product.oldPrice ? <span className="sale-flag">Sale</span> : null}
       </Link>
       <div className="product-copy">
+        <p className="product-label">{productLabel}</p>
         <Link to={productHref} className="product-name">
           {product.shortName || product.name}
         </Link>

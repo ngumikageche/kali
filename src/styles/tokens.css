@@ -20,4 +20,10 @@
   --display: "Barlow Condensed", Impact, sans-serif;
   --body: "Inter", system-ui, sans-serif;
   --utility: "Roboto Mono", monospace;
+  --type-hero: clamp(2.4rem, 7vw, 7rem);
+  --type-display: clamp(2.3rem, 5.5vw, 4.2rem);
+  --type-page-title: clamp(2rem, 4vw, 3.25rem);
+  --type-section-title: clamp(1.75rem, 3vw, 2.5rem);
+  --type-panel-title: clamp(1.45rem, 2.2vw, 2rem);
+  --type-card-title: clamp(1.1rem, 2vw, 1.55rem);
 }

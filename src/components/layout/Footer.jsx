@@ -6,6 +6,9 @@ import { formatStoreHours } from "../../utils/storefront.js";
 export default function Footer() {
   const { categories, company, stores } = useStorefront();
   const primaryStore = stores[0];
+  const companyName = company?.company_name || company?.legal_name || "Kali tacticals";
+  const companyUrlLabel = company?.website || company?.domain?.custom_domain || company?.domain?.host || "";
+  const companyUrlHref = companyUrlLabel ? toUrl(companyUrlLabel) : "";
 
   return (
     <footer className="footer">
@@ -16,21 +19,23 @@ export default function Footer() {
         </section>
         <section>
           <h3>Customer Service</h3>
+          <Link to="/category/account">Track Order</Link>
           <Link to="/category/delivery">Delivery Zones</Link>
           <Link to="/category/returns">Returns</Link>
           <Link to="/category/sizing">Sizing Guide</Link>
           <Link to="/category/payment">Payment Options</Link>
         </section>
         <section>
-          <h3>About {company?.company_name || "the Store"}</h3>
-          <p>{company?.company_name || "This storefront"} is served from the live public API tenant configuration.</p>
-          <p>Tenant: {company?.tenant_key || "not configured"} | Company EUID: {company?.company_euid || "n/a"}</p>
+          <h3>About {companyName}</h3>
+          <p>{companyName} offers field-ready apparel, gear, and everyday essentials.</p>
         </section>
         <section>
           <h3>Connect</h3>
           <p><MapPin size={16} /> {primaryStore?.address || "Store address not published yet"}</p>
           <p><Phone size={16} /> {primaryStore?.phone || "Phone coming soon"}</p>
-          <p><Mail size={16} /> {company?.company_name ? `Contact ${company.company_name}` : "support@example.com"}</p>
+          {company?.support_email ? <p><Mail size={16} /> <a href={`mailto:${company.support_email}`}>{company.support_email}</a></p> : null}
+          {!company?.support_email && companyUrlLabel ? <p><BriefcaseBusiness size={16} /> <a href={companyUrlHref} target="_blank" rel="noreferrer">{companyUrlLabel}</a></p> : null}
+          {!company?.support_email && !companyUrlLabel ? <p><Mail size={16} /> Contact {companyName}</p> : null}
           <p>{primaryStore ? formatStoreHours(primaryStore) : "Public store hours not configured yet."}</p>
           <div className="socials">
             <Camera />
@@ -40,9 +45,13 @@ export default function Footer() {
         </section>
       </div>
       <div className="footer-bottom">
-        <span>© 2026 {company?.company_name || "Storefront"}</span>
+        <span>© 2026 {companyName}</span>
         <span>M-Pesa | Airtel Money | Visa | Mastercard | Cash on Delivery | WhatsApp</span>
       </div>
     </footer>
   );
+}
+
+function toUrl(value = "") {
+  return /^https?:\/\//i.test(value) ? value : `https://${value}`;
 }

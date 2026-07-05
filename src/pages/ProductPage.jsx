@@ -5,6 +5,7 @@ import ProductGallery from "../components/product/ProductGallery.jsx";
 import ProductInfo from "../components/product/ProductInfo.jsx";
 import RecommendedByBrand from "../components/product/RecommendedByBrand.jsx";
 import ReviewsSection from "../components/reviews/ReviewsSection.jsx";
+import LoadingState from "../components/ui/LoadingState.jsx";
 import StorefrontState from "../components/ui/StorefrontState.jsx";
 import { useAsyncData } from "../hooks/useAsyncData.js";
 import { storefrontApi } from "../lib/storefrontApi.js";
@@ -48,7 +49,7 @@ export default function ProductPage() {
   );
 
   if (loading && !data.product) {
-    return <section className="section container"><StorefrontState title="Loading product" body="Fetching product detail from the public API." /></section>;
+    return <LoadingState variant="product" />;
   }
 
   if (error || !data.product) {

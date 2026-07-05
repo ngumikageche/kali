@@ -16,14 +16,14 @@ export default function PromoBanner({ promotion }) {
     <section className="container promo-wrap">
       <article className="promo promo-dark">
         <span>{promotion?.name || "Live Promotion"}</span>
-        <h2>{promotion?.headline || promotion?.title || "Public offers from the active tenant"}</h2>
-        <p>{promotion?.description || "Promotions from `/public/promotions` can be surfaced here as soon as they are enabled."}</p>
+        <h2>{promotion?.headline || promotion?.title || "Fresh offers on tactical gear"}</h2>
+        <p>{promotion?.description || "Shop limited-time savings on apparel, boots, accessories, and field-ready essentials."}</p>
       </article>
       <article className="promo promo-light">
         <span className="urgency">Flash Sale</span>
-        <h2>{promotion?.code ? `${promotion.code} ready for validation` : "Promo validation endpoint connected"}</h2>
+        <h2>{promotion?.code ? `Use code ${promotion.code} at checkout` : "Extra savings available at checkout"}</h2>
         <strong className="countdown">{hh}:{mm}:{ss}</strong>
-        <p>Use `/public/promotions/validate` and `/public/discounts/calculate` during checkout to confirm the final public discount.</p>
+        <p>Your eligible discount will be applied during checkout before you place your order.</p>
       </article>
     </section>
   );

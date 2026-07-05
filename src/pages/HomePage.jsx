@@ -7,6 +7,7 @@ import Newsletter from "../components/home/Newsletter.jsx";
 import PaymentOptions from "../components/home/PaymentOptions.jsx";
 import PromoBanner from "../components/home/PromoBanner.jsx";
 import RecommendedProducts from "../components/home/RecommendedProducts.jsx";
+import LoadingState from "../components/ui/LoadingState.jsx";
 import StorefrontState from "../components/ui/StorefrontState.jsx";
 import { useStorefront } from "../context/StorefrontContext.jsx";
 import { useAsyncData } from "../hooks/useAsyncData.js";
@@ -45,7 +46,7 @@ export default function HomePage() {
       <CategoryGrid categories={categories.slice(0, 6)} />
       <PromoBanner promotion={data.promotions[0]} />
       {error ? <section className="container"><StorefrontState title="Storefront API unavailable" body={error.message} tone="error" /></section> : null}
-      {loading && !data.products.length ? <section className="container"><StorefrontState title="Loading catalog" body="Fetching live products from `/public/products`." /></section> : null}
+      {loading && !data.products.length ? <section className="container"><LoadingState title="Loading products..." /></section> : null}
       {!loading && !data.products.length ? <section className="container"><StorefrontState title="No public products" body="The tenant returned an empty product list. Add active products or verify the public API settings." /></section> : null}
       {featuredProducts.length ? <FeaturedCollection products={featuredProducts} companyName={company?.company_name || "the storefront"} /> : null}
       <LocalAds stores={stores} />
