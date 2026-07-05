@@ -5,6 +5,7 @@ import ProductGallery from "../components/product/ProductGallery.jsx";
 import ProductInfo from "../components/product/ProductInfo.jsx";
 import RecommendedByBrand from "../components/product/RecommendedByBrand.jsx";
 import ReviewsSection from "../components/reviews/ReviewsSection.jsx";
+import SeoHead from "../components/seo/SeoHead.jsx";
 import LoadingState from "../components/ui/LoadingState.jsx";
 import StorefrontState from "../components/ui/StorefrontState.jsx";
 import { useAsyncData } from "../hooks/useAsyncData.js";
@@ -13,14 +14,13 @@ import { normalizeProduct, normalizeReview } from "../utils/storefront.js";
 
 export default function ProductPage() {
   const { id, slug } = useParams();
-  const lookupKey = slug || id;
+  const isIdRoute = Boolean(id);
+  const lookupKey = isIdRoute ? id : slug;
   const { data, loading, error } = useAsyncData(
     async () => {
-      const primaryResponse = slug
-        ? await storefrontApi.products.getBySlug(slug)
-        : /^[0-9]+$/.test(String(id))
-          ? await storefrontApi.products.getById(id)
-          : await storefrontApi.products.getBySlug(id);
+      const primaryResponse = isIdRoute
+        ? await storefrontApi.products.getById(id)
+        : await storefrontApi.products.getBySlug(slug);
       const product = normalizeProduct(primaryResponse.product || primaryResponse);
 
       const [relatedResult, reviewsResult] = await Promise.allSettled([
@@ -45,7 +45,7 @@ export default function ProductPage() {
       };
     },
     [lookupKey],
-    { initialData: { product: null, related: [], reviews: [] }, enabled: Boolean(lookupKey) }
+    { initialData: { product: null, related: [], reviews: [] }, enabled: Boolean(lookupKey), cacheKey: `product:${lookupKey}` }
   );
 
   if (loading && !data.product) {
@@ -58,6 +58,14 @@ export default function ProductPage() {
 
   return (
     <>
+      <SeoHead
+        title={`${data.product.name} | Kali Tactical`}
+        description={buildProductDescription(data.product)}
+        path={data.product.canonicalUrl || data.product.productHref}
+        image={data.product.image}
+        type="product"
+        jsonLd={buildProductStructuredData(data.product)}
+      />
       <div className="container">
         <Breadcrumb product={data.product} />
       </div>
@@ -70,4 +78,50 @@ export default function ProductPage() {
       <ReviewsSection product={data.product} reviews={data.reviews} />
     </>
   );
+}
+
+function buildProductDescription(product) {
+  if (product.description) {
+    return String(product.description).replace(/\s+/g, " ").slice(0, 155);
+  }
+
+  return `${product.name} from Kali Tactical. Shop tactical gear, boots, utility wear, and field-ready equipment in Nairobi and across East Africa.`;
+}
+
+function buildProductStructuredData(product) {
+  const availability = product.isInStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock";
+
+  return [
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: product.name,
+      description: buildProductDescription(product),
+      image: product.gallery?.length ? product.gallery : [product.image].filter(Boolean),
+      sku: product.sku || undefined,
+      brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,
+      category: product.categoryName || undefined,
+      aggregateRating: product.reviewCount ? {
+        "@type": "AggregateRating",
+        ratingValue: product.rating || 0,
+        reviewCount: product.reviewCount
+      } : undefined,
+      offers: {
+        "@type": "Offer",
+        priceCurrency: product.currency || "KES",
+        price: product.price,
+        availability,
+        url: product.canonicalUrl || product.productHref
+      }
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: "/" },
+        { "@type": "ListItem", position: 2, name: product.categoryName || "Shop", item: `/category/${product.category}` },
+        { "@type": "ListItem", position: 3, name: product.name, item: product.canonicalUrl || product.productHref }
+      ]
+    }
+  ];
 }

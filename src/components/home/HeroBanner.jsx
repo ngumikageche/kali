@@ -62,7 +62,7 @@ export default function HeroBanner({ slides: externalSlides = slides, companyNam
         <p>{slide.copy}</p>
         <div className="hero-actions">
           <HeroAction className="btn btn-primary" href={slide.href}>{slide.actionLabel || "Explore"}</HeroAction>
-          <Link className="btn btn-secondary" to="/category/shop">Shop All</Link>
+          <Link className="btn btn-secondary" to="/category/new-arrivals">New Arrivals</Link>
         </div>
       </div>
       {hasMultipleSlides ? <button className="hero-arrow hero-prev" onClick={() => move(-1)} aria-label="Previous slide"><ChevronLeft /></button> : null}

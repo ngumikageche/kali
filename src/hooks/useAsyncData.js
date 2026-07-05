@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
+import { usePreloadedData } from "../context/PreloadedDataContext.jsx";
 
 export function useAsyncData(loader, deps = [], options = {}) {
-  const { initialData = null, enabled = true } = options;
-  const [data, setData] = useState(initialData);
-  const [loading, setLoading] = useState(enabled);
+  const { initialData = null, enabled = true, cacheKey } = options;
+  const preloadedData = usePreloadedData();
+  const cachedData = cacheKey ? preloadedData?.[cacheKey] : undefined;
+  const [data, setData] = useState(cachedData ?? initialData);
+  const [loading, setLoading] = useState(enabled && cachedData === undefined);
   const [error, setError] = useState(null);
 
   useEffect(() => {

@@ -14,6 +14,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const links = [
     ["Shop", "/category/shop"],
+    ["New Arrivals", "/category/new-arrivals"],
     ...categories.slice(0, 3).map((category) => [category.name, `/category/${category.slug}`]),
     ["Track Order", "/category/account"],
     ["About", "/category/about"],

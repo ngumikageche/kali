@@ -7,6 +7,7 @@ import Newsletter from "../components/home/Newsletter.jsx";
 import PaymentOptions from "../components/home/PaymentOptions.jsx";
 import PromoBanner from "../components/home/PromoBanner.jsx";
 import RecommendedProducts from "../components/home/RecommendedProducts.jsx";
+import SeoHead from "../components/seo/SeoHead.jsx";
 import LoadingState from "../components/ui/LoadingState.jsx";
 import StorefrontState from "../components/ui/StorefrontState.jsx";
 import { useStorefront } from "../context/StorefrontContext.jsx";
@@ -31,16 +32,50 @@ export default function HomePage() {
       };
     },
     [],
-    { initialData: { products: [], carousel: [], promotions: [] } }
+    { initialData: { products: [], carousel: [], promotions: [] }, cacheKey: "home" }
   );
 
   const featuredProducts = [...data.products]
     .sort((left, right) => Number(right.isBestSeller) - Number(left.isBestSeller) || right.rating - left.rating || right.discountPercent - left.discountPercent)
     .slice(0, 4);
   const recommendedProducts = data.products.filter((product) => !featuredProducts.some((featured) => featured.id === product.id)).slice(0, 6);
+  const seoProducts = [...featuredProducts, ...recommendedProducts].slice(0, 10);
+  const homeStructuredData = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: company?.company_name || "Kali Tactical",
+      url: "/",
+      email: company?.support_email || undefined
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: company?.company_name || "Kali Tactical",
+      url: "/"
+    },
+    seoProducts.length ? {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      name: "Featured tactical gear",
+      itemListElement: seoProducts.map((product, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        url: product.canonicalUrl || product.productHref,
+        name: product.name
+      }))
+    } : null
+  ].filter(Boolean);
 
   return (
     <>
+      <SeoHead
+        title={`${company?.company_name || "Kali Tactical"} | Tactical Gear, Boots and Outdoor Apparel`}
+        description="Shop Kali Tactical for tactical gear, boots, utility wear, outdoor apparel, and field-ready accessories in Nairobi and across East Africa."
+        path="/"
+        image={data.carousel[0]?.image || featuredProducts[0]?.image}
+        jsonLd={homeStructuredData}
+      />
       <HeroBanner slides={data.carousel} companyName={company?.company_name || "Storefront"} />
       <AnnouncementStrip />
       <CategoryGrid categories={categories.slice(0, 6)} />

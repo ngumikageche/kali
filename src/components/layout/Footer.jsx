@@ -15,6 +15,7 @@ export default function Footer() {
       <div className="container footer-grid">
         <section>
           <h3>Shop</h3>
+          <Link to="/category/new-arrivals">New Arrivals</Link>
           {categories.slice(0, 4).map((category) => <Link to={`/category/${category.slug}`} key={category.id}>{category.name}</Link>)}
         </section>
         <section>

@@ -21,7 +21,7 @@ export function StorefrontProvider({ children }) {
       };
     },
     [],
-    { initialData: { company: null, categories: [], stores: [] } }
+    { initialData: { company: null, categories: [], stores: [] }, cacheKey: "storefront" }
   );
 
   const value = useMemo(

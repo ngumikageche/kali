@@ -2,6 +2,7 @@ import { CheckCheck, Clock, Mail, MapPin, MessageCircle, Phone, ShieldCheck, Tru
 import { useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import LoadingState from "../components/ui/LoadingState.jsx";
+import SeoHead from "../components/seo/SeoHead.jsx";
 import ProductCard from "../components/ui/ProductCard.jsx";
 import StorefrontState from "../components/ui/StorefrontState.jsx";
 import { storefrontConfig } from "../config/storefront.js";
@@ -20,7 +21,7 @@ export default function CategoryPage() {
   if (slug === "contact") return <ContactPage stores={stores} />;
   if (slug === "account") return <AccountPage />;
 
-  const isUtilityPage = ["shop", "sale", "cart", "delivery", "returns", "sizing", "payment", "account"].includes(slug);
+  const isUtilityPage = ["shop", "sale", "new-arrivals", "cart", "delivery", "returns", "sizing", "payment", "account"].includes(slug);
   const search = searchParams.get("q") || "";
   const { data, loading, error } = useAsyncData(
     async () => {
@@ -41,11 +42,34 @@ export default function CategoryPage() {
       };
     },
     [slug, search],
-    { initialData: { category: null, products: [] }, enabled: Boolean(slug) }
+    { initialData: { category: null, products: [] }, enabled: Boolean(slug), cacheKey: `category:${slug}:q=${search}` }
   );
+  const pageTitle = buildCategoryTitle(slug, data.category?.name);
+  const pageDescription = buildCategoryDescription(slug, data.category?.description);
+  const categoryStructuredData = data.products.length ? [
+    {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: pageTitle,
+      description: pageDescription,
+      url: `/category/${slug}`
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      name: pageTitle,
+      itemListElement: data.products.slice(0, 24).map((product, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        url: product.canonicalUrl || product.productHref,
+        name: product.name
+      }))
+    }
+  ] : [];
 
   return (
     <section className="section container category-page">
+      <SeoHead title={`${pageTitle} | Kali Tactical`} description={pageDescription} path={`/category/${slug}`} jsonLd={categoryStructuredData} />
       <div className="section-heading">
         <p className="eyebrow">KALITACTICAL</p>
         <h1>{data.category?.name || title(slug)}</h1>
@@ -67,6 +91,11 @@ function AboutPage({ stores = [] }) {
   const primaryStore = stores[0];
   return (
     <section className="section container info-page">
+      <SeoHead
+        title="About Kali Tactical | Tactical Gear in Nairobi"
+        description="Learn about Kali Tactical, a Nairobi-based tactical gear and apparel store serving Kenya and East Africa."
+        path="/category/about"
+      />
       <div className="info-hero">
         <div>
           <p className="eyebrow">About KALITACTICAL</p>
@@ -118,6 +147,11 @@ function ContactPage({ stores = [] }) {
   const primaryStore = stores[0];
   return (
     <section className="section container info-page">
+      <SeoHead
+        title="Contact Kali Tactical | Nairobi Tactical Store"
+        description="Contact Kali Tactical for sizing help, delivery questions, wholesale inquiries, and product recommendations."
+        path="/category/contact"
+      />
       <div className="section-heading">
         <div>
           <p className="eyebrow">Contact KALITACTICAL</p>
@@ -211,6 +245,12 @@ function AccountPage() {
 
   return (
     <section className="section container info-page order-tracker-page">
+      <SeoHead
+        title="Your Profile and Order Tracking | Kali Tactical"
+        description="Manage your saved profile and track recent Kali Tactical orders."
+        path="/category/account"
+        noindex
+      />
       <div className="section-heading">
         <div>
           <p className="eyebrow">Order Tracking</p>
@@ -377,4 +417,40 @@ function formatOrderDate(value) {
   } catch {
     return value;
   }
+}
+
+function buildCategoryTitle(slug, categoryName) {
+  if (categoryName) {
+    return categoryName;
+  }
+
+  if (slug === "shop") {
+    return "All Tactical Gear";
+  }
+
+  if (slug === "sale") {
+    return "Tactical Gear Sale";
+  }
+
+  if (slug === "new-arrivals") {
+    return "New Arrivals";
+  }
+
+  return title(slug);
+}
+
+function buildCategoryDescription(slug, description) {
+  if (description) {
+    return description;
+  }
+
+  if (slug === "new-arrivals") {
+    return "Browse the latest tactical gear, boots, utility wear, and fresh product drops from Kali Tactical.";
+  }
+
+  if (slug === "sale") {
+    return "Shop discounted tactical gear, boots, accessories, and utility wear from Kali Tactical.";
+  }
+
+  return "Browse the latest tactical gear, boots, utility wear, and field-ready accessories from Kali Tactical.";
 }

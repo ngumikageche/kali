@@ -28,6 +28,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/product/:id" element={<ProductPage />} />
+          <Route path="/product/:id/:name" element={<ProductPage />} />
           <Route path="/products/:slug" element={<ProductPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/category/cart" element={<CartPage />} />

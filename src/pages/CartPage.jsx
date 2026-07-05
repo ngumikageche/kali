@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import SeoHead from "../components/seo/SeoHead.jsx";
 import ResponsiveImage from "../components/ui/ResponsiveImage.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { formatPrice } from "../utils/format.js";
@@ -37,6 +38,7 @@ export default function CartPage() {
 
   return (
     <section className="section container cart-page">
+      <SeoHead title="Cart | Kali Tactical" description="Review your selected tactical gear before checkout." path="/cart" noindex />
       <div className="section-heading">
         <div>
           <p className="eyebrow">KALITACTICAL</p>
