@@ -16,8 +16,13 @@ const delivery = [
 
 export default function ProductInfo({ product }) {
   const { addToCart, toggleWishlist, isWishlisted } = useCart();
-  const [size, setSize] = useState(product.sizes?.[0] || "Standard");
-  const [color, setColor] = useState(product.colors?.[0] || "");
+  const sizes = Array.isArray(product.sizes) ? product.sizes : [];
+  const colors = Array.isArray(product.colors) ? product.colors : [];
+  const tags = Array.isArray(product.tags) ? product.tags : [];
+  const medicalConditions = Array.isArray(product.medicalConditions) ? product.medicalConditions : [];
+  const keyFeatures = Array.isArray(product.keyFeatures) ? product.keyFeatures : [];
+  const [size, setSize] = useState(sizes[0] || "Standard");
+  const [color, setColor] = useState(colors[0] || "");
   const [quantity, setQuantity] = useState(1);
   const [open, setOpen] = useState("Click & Collect");
   const saving = product.oldPrice ? product.oldPrice - product.price : 0;
@@ -25,8 +30,8 @@ export default function ProductInfo({ product }) {
   const availability = getAvailability(product);
   const productTags = [
     ...(product.isBestSeller ? ["Best Seller"] : []),
-    ...product.tags,
-    ...product.medicalConditions
+    ...tags,
+    ...medicalConditions
   ].filter(Boolean).slice(0, 6);
   const productFacts = [
     { label: "Category", value: product.categoryName || "Shop" },
@@ -66,29 +71,29 @@ export default function ProductInfo({ product }) {
           </article>
         ))}
       </div>
-      {product.keyFeatures?.length ? (
+      {keyFeatures.length ? (
         <div className="product-feature-block">
           <span className="product-section-label">Key features</span>
           <ul className="product-feature-list">
-            {product.keyFeatures.slice(0, 5).map((feature) => <li key={feature}>{feature}</li>)}
+            {keyFeatures.slice(0, 5).map((feature) => <li key={feature}>{feature}</li>)}
           </ul>
         </div>
       ) : null}
-      {product.sizes?.length ? (
+      {sizes.length ? (
         <div className="selector">
           <span>Size <a href="#size-guide">Size Guide</a></span>
           <div className="button-grid">
-            {product.sizes.map((item) => (
+            {sizes.map((item) => (
               <button className={size === item ? "selected" : ""} onClick={() => setSize(item)} key={item}>{item}</button>
             ))}
           </div>
         </div>
       ) : null}
-      {product.colors?.length ? (
+      {colors.length ? (
         <div className="selector">
           <span>Color: {color}</span>
           <div className="swatches">
-            {product.colors.map((item) => (
+            {colors.map((item) => (
               <button className={color === item ? "selected" : ""} style={{ "--swatch": swatchColor(item) }} onClick={() => setColor(item)} key={item} aria-label={item} />
             ))}
           </div>

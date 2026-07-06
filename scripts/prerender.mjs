@@ -354,11 +354,59 @@ function readSlugFromCanonicalUrl(pathname = "") {
   return match?.[1] || "";
 }
 
+function pickPrimaryImage(product = {}) {
+  return (
+    product.primary_image_url ||
+    coerceArray(product.image_urls)[0] ||
+    coerceArray(product.images).map((item) => item?.url).find(Boolean) ||
+    ""
+  );
+}
+
+function normalizeColor(value) {
+  if (!value) {
+    return [];
+  }
+
+  return coerceArray(value).filter(Boolean);
+}
+
+function normalizeSpecifications(product = {}) {
+  if (Array.isArray(product.specifications)) {
+    return product.specifications;
+  }
+
+  if (product.specifications && typeof product.specifications === "object") {
+    return Object.entries(product.specifications).map(([label, value]) => ({ label, value }));
+  }
+
+  return [];
+}
+
 function normalizeProduct(product = {}) {
   const canonicalSlug = readSlugFromCanonicalUrl(product.canonical_url);
   const publicSlug = product.slug || canonicalSlug || "";
   const slug = publicSlug || slugify(product.name);
-  const image = product.primary_image_url || coerceArray(product.image_urls)[0] || coerceArray(product.images).map((item) => item?.url).find(Boolean) || "";
+  const categorySlug = product.category_slug || slugify(product.category_name || product.category);
+  const subcategorySlug = product.subcategory_slug || slugify(product.subcategory_name || product.subcategory);
+  const gallery = coerceArray(product.image_urls).length
+    ? coerceArray(product.image_urls)
+    : coerceArray(product.images).map((item) => item?.url).filter(Boolean);
+  const image = pickPrimaryImage(product);
+  const stockQuantity = product.stock_quantity != null
+    ? Number(product.stock_quantity)
+    : product.quantity != null
+      ? Number(product.quantity)
+      : product.inventory_count != null
+        ? Number(product.inventory_count)
+        : null;
+  const isInStock = typeof product.is_in_stock === "boolean"
+    ? product.is_in_stock
+    : typeof product.in_stock === "boolean"
+      ? product.in_stock
+      : Number.isFinite(stockQuantity)
+        ? stockQuantity > 0
+        : true;
 
   return {
     ...product,
@@ -367,10 +415,19 @@ function normalizeProduct(product = {}) {
     shortName: product.short_name || product.name || "Untitled product",
     publicSlug,
     slug,
+    routeKey: publicSlug || String(product.id),
     productHref: publicSlug ? `/products/${publicSlug}` : `/product/${product.id}/${slug}`,
     canonicalUrl: product.canonical_url || (publicSlug ? `/products/${publicSlug}` : `/product/${product.id}/${slug}`),
     brand: product.brand || "",
+    sku: product.sku || product.product_code || product.code || "",
+    category: categorySlug,
+    categoryName: product.category_name || product.category || "Shop",
+    subcategory: subcategorySlug,
+    subcategoryName: product.subcategory_name || product.subcategory || "",
     price: Number(product.price || 0),
+    oldPrice: product.old_price != null ? Number(product.old_price) : product.original_price != null ? Number(product.original_price) : null,
+    originalPrice: product.original_price != null ? Number(product.original_price) : null,
+    discountAmount: Number(product.discount_amount || 0),
     rating: Number(product.rating || 0),
     reviews: Number(product.review_count || product.reviews_count || 0),
     reviewCount: Number(product.review_count || product.reviews_count || 0),
@@ -379,11 +436,20 @@ function normalizeProduct(product = {}) {
     isBestSeller: Boolean(product.is_best_seller),
     description: product.description || "",
     image,
-    gallery: coerceArray(product.image_urls).length ? coerceArray(product.image_urls) : image ? [image] : [],
-    category: product.category_slug || slugify(product.category_name || product.category),
-    categoryName: product.category_name || product.category || "Shop",
+    gallery: gallery.length ? gallery : image ? [image] : [],
+    colors: normalizeColor(product.colors),
+    sizes: coerceArray(product.sizes).filter(Boolean),
+    tags: coerceArray(product.tags).filter(Boolean),
+    medicalConditions: coerceArray(product.medical_conditions).filter(Boolean),
+    prices: coerceArray(product.prices),
+    keyFeatures: coerceArray(product.key_features).filter(Boolean),
+    specifications: normalizeSpecifications(product),
+    ingredients: product.ingredients_or_contents || "",
+    additionalInformation: product.additional_information || "",
+    requiresPrescription: Boolean(product.requires_prescription),
+    stockQuantity,
     currency: product.currency || "KES",
-    isInStock: product.is_in_stock !== false && product.in_stock !== false
+    isInStock
   };
 }
 
