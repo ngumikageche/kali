@@ -5,23 +5,23 @@ import ResponsiveImage from "../ui/ResponsiveImage.jsx";
 
 const slides = [
   {
-    title: "PHANTOM SERIES - GEAR UP. MOVE SMART.",
-    copy: "Built for the Field. Worn in the City. Premium tactical gear for Nairobi and East Africa.",
-    image: "https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=1600&q=80",
+    title: "Equipment for the decisive day.",
+    copy: "Purpose-built apparel, field gear, and everyday carry for Nairobi and beyond.",
+    image: "https://images.unsplash.com/photo-1533130061792-64b345e4a833?auto=format&fit=crop&w=2000&q=85",
     href: "/category/shop",
-    actionLabel: "Shop Now"
+    actionLabel: "Shop the collection"
   },
   {
-    title: "FATHER'S DAY - GIFT THE FIELD-READY DAD",
-    copy: "Gift bundles with up to 25% off selected boots, trousers, and jackets.",
-    image: "https://images.unsplash.com/photo-1520975916090-3105956dac38?auto=format&fit=crop&w=1600&q=80",
+    title: "Built to be used, not displayed.",
+    copy: "Durable layers and utility pieces that hold their ground in changing conditions.",
+    image: "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?auto=format&fit=crop&w=2000&q=85",
     href: "/category/sale",
-    actionLabel: "View Sale"
+    actionLabel: "Explore field layers"
   },
   {
-    title: "NEW DROP - ALL-BLACK COLLECTION NOW LIVE",
-    copy: "Dark military-luxury staples built around stealth palettes, ripstop fabrics, and everyday carry.",
-    image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80",
+    title: "Quiet strength, everyday utility.",
+    copy: "A considered collection of tactical essentials in refined, durable materials.",
+    image: "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=2000&q=85",
     href: "/category/shop",
     actionLabel: "Explore Drop"
   }
