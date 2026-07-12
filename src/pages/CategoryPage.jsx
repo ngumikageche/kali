@@ -1,5 +1,5 @@
 import { CheckCheck, Clock, Mail, MapPin, MessageCircle, Phone, ShieldCheck, Truck, UsersRound } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import LoadingState from "../components/ui/LoadingState.jsx";
 import SeoHead from "../components/seo/SeoHead.jsx";
@@ -46,6 +46,33 @@ export default function CategoryPage() {
   );
   const pageTitle = buildCategoryTitle(slug, data.category?.name);
   const pageDescription = buildCategoryDescription(slug, data.category?.description);
+
+  useEffect(() => {
+    if (!data.products.length || typeof window === "undefined" || typeof window.gtag !== "function") {
+      return;
+    }
+
+    const pagePath = `${window.location.pathname}${window.location.search}`;
+    const items = data.products.slice(0, 10).map((product) => ({
+      item_id: String(product.id),
+      item_name: product.name,
+      item_category: product.categoryName || product.category || "",
+      item_brand: product.brand || "",
+      price: Number(product.price || 0),
+      quantity: 1,
+      affiliation: "Kali Tactical"
+    }));
+
+    window.gtag("event", "view_item_list", {
+      item_list_id: `category:${slug}`,
+      item_list_name: pageTitle,
+      items,
+      search_term: search || undefined,
+      page_path: pagePath,
+      content_type: "category"
+    });
+  }, [data.products, pageTitle, search, slug]);
+
   const categoryStructuredData = data.products.length ? [
     {
       "@context": "https://schema.org",

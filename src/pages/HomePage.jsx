@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import AnnouncementStrip from "../components/home/AnnouncementStrip.jsx";
 import CategoryGrid from "../components/home/CategoryGrid.jsx";
 import FeaturedCollection from "../components/home/FeaturedCollection.jsx";
@@ -38,6 +39,28 @@ export default function HomePage() {
   const featuredProducts = [...data.products]
     .sort((left, right) => Number(right.isBestSeller) - Number(left.isBestSeller) || right.rating - left.rating || right.discountPercent - left.discountPercent)
     .slice(0, 4);
+
+  useEffect(() => {
+    if (!featuredProducts.length || typeof window === "undefined" || typeof window.gtag !== "function") {
+      return;
+    }
+
+    window.gtag("event", "view_item_list", {
+      item_list_id: "home_featured_products",
+      item_list_name: "Featured Products",
+      items: featuredProducts.slice(0, 10).map((product) => ({
+        item_id: String(product.id),
+        item_name: product.name,
+        item_category: product.categoryName || product.category || "",
+        item_brand: product.brand || "",
+        price: Number(product.price || 0),
+        quantity: 1,
+        affiliation: "Kali Tactical"
+      })),
+      page_path: window.location.pathname,
+      content_type: "home"
+    });
+  }, [featuredProducts]);
   const recommendedProducts = data.products.filter((product) => !featuredProducts.some((featured) => featured.id === product.id)).slice(0, 6);
   const seoProducts = [...featuredProducts, ...recommendedProducts].slice(0, 10);
   const homeStructuredData = [

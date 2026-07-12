@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Breadcrumb from "../components/product/Breadcrumb.jsx";
 import ProductDetails from "../components/product/ProductDetails.jsx";
@@ -47,6 +48,28 @@ export default function ProductPage() {
     [lookupKey],
     { initialData: { product: null, related: [], reviews: [] }, enabled: Boolean(lookupKey), cacheKey: `product:${lookupKey}` }
   );
+
+  useEffect(() => {
+    if (!data.product || typeof window === "undefined" || typeof window.gtag !== "function") {
+      return;
+    }
+
+    window.gtag("event", "view_item", {
+      currency: data.product.currency || "KES",
+      value: Number(data.product.price || 0),
+      items: [{
+        item_id: String(data.product.id || data.product.sku || lookupKey),
+        item_name: data.product.name,
+        item_category: data.product.categoryName || data.product.category || "",
+        item_brand: data.product.brand || "",
+        item_variant: data.product.sku || "",
+        price: Number(data.product.price || 0),
+        quantity: 1
+      }],
+      page_path: window.location.pathname + window.location.search,
+      content_type: "product"
+    });
+  }, [data.product, lookupKey]);
 
   if (loading && !data.product) {
     return <LoadingState variant="product" />;

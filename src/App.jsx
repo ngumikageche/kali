@@ -12,12 +12,43 @@ import CartPage from "./pages/CartPage.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import ProductPage from "./pages/ProductPage.jsx";
 
+function inferContentType(pathname) {
+  if (pathname === "/") {
+    return "home";
+  }
+
+  if (pathname.startsWith("/product")) {
+    return "product";
+  }
+
+  if (pathname.startsWith("/category")) {
+    return "category";
+  }
+
+  if (pathname === "/cart") {
+    return "cart";
+  }
+
+  return "page";
+}
+
 export default function App() {
   const location = useLocation();
 
   useEffect(() => {
     const analytics = initializeRegExAnalytics();
     analytics?.trackPageview();
+
+    if (typeof window !== "undefined" && typeof window.gtag === "function") {
+      const pagePath = `${location.pathname}${location.search}${location.hash}`;
+
+      window.gtag("event", "page_view", {
+        page_path: pagePath,
+        page_location: window.location.href,
+        page_title: document.title,
+        content_type: inferContentType(location.pathname)
+      });
+    }
   }, [location.pathname, location.search, location.hash]);
 
   return (
