@@ -1,4 +1,4 @@
-import { CheckCheck, Clock, Mail, MapPin, MessageCircle, Phone, ShieldCheck, Truck, UsersRound } from "lucide-react";
+import { CheckCheck, Clock, Mail, MapPin, MessageCircle, Phone, ShieldCheck, SlidersHorizontal, Truck, UsersRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import LoadingState from "../components/ui/LoadingState.jsx";
@@ -15,12 +15,9 @@ import { normalizeProduct } from "../utils/storefront.js";
 export default function CategoryPage() {
   const { slug } = useParams();
   const [searchParams] = useSearchParams();
+  const [sort, setSort] = useState("newest");
   const { stores } = useStorefront();
-
-  if (slug === "about") return <AboutPage stores={stores} />;
-  if (slug === "contact") return <ContactPage stores={stores} />;
-  if (slug === "account") return <AccountPage />;
-
+  const isInfoPage = ["about", "contact", "account"].includes(slug);
   const isUtilityPage = ["shop", "sale", "new-arrivals", "cart", "delivery", "returns", "sizing", "payment", "account"].includes(slug);
   const search = searchParams.get("q") || "";
   const { data, loading, error } = useAsyncData(
@@ -42,18 +39,24 @@ export default function CategoryPage() {
       };
     },
     [slug, search],
-    { initialData: { category: null, products: [] }, enabled: Boolean(slug), cacheKey: `category:${slug}:q=${search}` }
+    { initialData: { category: null, products: [] }, enabled: Boolean(slug) && !isInfoPage, cacheKey: `category:${slug}:q=${search}` }
   );
   const pageTitle = buildCategoryTitle(slug, data.category?.name);
   const pageDescription = buildCategoryDescription(slug, data.category?.description);
+  const sortedProducts = useMemo(() => [...data.products].sort((left, right) => {
+    if (sort === "price-low") return left.price - right.price;
+    if (sort === "price-high") return right.price - left.price;
+    if (sort === "rated") return right.rating - left.rating;
+    return 0;
+  }), [data.products, sort]);
 
   useEffect(() => {
-    if (!data.products.length || typeof window === "undefined" || typeof window.gtag !== "function") {
+    if (!sortedProducts.length || typeof window === "undefined" || typeof window.gtag !== "function") {
       return;
     }
 
     const pagePath = `${window.location.pathname}${window.location.search}`;
-    const items = data.products.slice(0, 10).map((product) => ({
+    const items = sortedProducts.slice(0, 10).map((product) => ({
       item_id: String(product.id),
       item_name: product.name,
       item_category: product.categoryName || product.category || "",
@@ -71,9 +74,13 @@ export default function CategoryPage() {
       page_path: pagePath,
       content_type: "category"
     });
-  }, [data.products, pageTitle, search, slug]);
+  }, [sortedProducts, pageTitle, search, slug]);
 
-  const categoryStructuredData = data.products.length ? [
+  if (slug === "about") return <AboutPage stores={stores} />;
+  if (slug === "contact") return <ContactPage stores={stores} />;
+  if (slug === "account") return <AccountPage />;
+
+  const categoryStructuredData = sortedProducts.length ? [
     {
       "@context": "https://schema.org",
       "@type": "CollectionPage",
@@ -85,7 +92,7 @@ export default function CategoryPage() {
       "@context": "https://schema.org",
       "@type": "ItemList",
       name: pageTitle,
-      itemListElement: data.products.slice(0, 24).map((product, index) => ({
+      itemListElement: sortedProducts.slice(0, 24).map((product, index) => ({
         "@type": "ListItem",
         position: index + 1,
         url: product.canonicalUrl || product.productHref,
@@ -95,17 +102,27 @@ export default function CategoryPage() {
   ] : [];
 
   return (
-    <section className="section container category-page">
+    <section className="category-page">
       <SeoHead title={`${pageTitle} | Kali Tactical`} description={pageDescription} path={`/category/${slug}`} jsonLd={categoryStructuredData} />
-      <div className="section-heading">
-        <p className="eyebrow">KALITACTICAL</p>
-        <h1>{data.category?.name || title(slug)}</h1>
-        <p>{search ? `Results for "${search}"` : data.category?.description || "Browse the latest arrivals, essentials, and tactical favorites."}</p>
+      <header className="catalog-hero">
+        <div className="container">
+          <p className="eyebrow">Collection / {data.category?.name || title(slug)}</p>
+          <h1>{data.category?.name || title(slug)}</h1>
+          <p>{search ? `Results for "${search}"` : data.category?.description || "Field-ready essentials selected for practical, everyday use."}</p>
+        </div>
+      </header>
+      <div className="container catalog-content">
+        <div className="catalog-toolbar">
+          <span>{sortedProducts.length ? `${sortedProducts.length} considered pieces` : "Live catalog"}</span>
+          <label className="catalog-filter"><SlidersHorizontal size={16} /><span>Sort</span><select value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Sort products"><option value="newest">Newest</option><option value="rated">Highest rated</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select></label>
+        </div>
       </div>
-      {loading && !data.products.length ? <LoadingState title="Loading products..." /> : null}
-      {error ? <StorefrontState title="Category unavailable" body={error.message} tone="error" /> : null}
-      {!loading && !error && !data.products.length ? <StorefrontState title="No products found" body="This category currently has no active public products." /> : null}
-      {data.products.length ? <div className="catalog-grid">{data.products.map((product) => <ProductCard key={product.id} product={product} />)}</div> : null}
+      <div className="container catalog-content">
+        {loading && !data.products.length ? <LoadingState title="Loading products..." /> : null}
+        {error ? <StorefrontState title="Category unavailable" body={error.message} tone="error" /> : null}
+        {!loading && !error && !data.products.length ? <StorefrontState title="No products found" body="This category currently has no active public products." /> : null}
+        {sortedProducts.length ? <div className="catalog-grid">{sortedProducts.map((product) => <ProductCard key={product.id} product={product} />)}</div> : null}
+      </div>
     </section>
   );
 }

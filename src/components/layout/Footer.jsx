@@ -32,12 +32,12 @@ export default function Footer() {
         </section>
         <section>
           <h3>Connect</h3>
-          <p><MapPin size={16} /> {primaryStore?.address || "Store address not published yet"}</p>
-          <p><Phone size={16} /> {primaryStore?.phone || "Phone coming soon"}</p>
+          {primaryStore?.address ? <p><MapPin size={16} /> {primaryStore.address}</p> : null}
+          {primaryStore?.phone ? <p><Phone size={16} /> {primaryStore.phone}</p> : null}
           {company?.support_email ? <p><Mail size={16} /> <a href={`mailto:${company.support_email}`}>{company.support_email}</a></p> : null}
           {!company?.support_email && companyUrlLabel ? <p><BriefcaseBusiness size={16} /> <a href={companyUrlHref} target="_blank" rel="noreferrer">{companyUrlLabel}</a></p> : null}
-          {!company?.support_email && !companyUrlLabel ? <p><Mail size={16} /> Contact {companyName}</p> : null}
-          <p>{primaryStore ? formatStoreHours(primaryStore) : "Public store hours not configured yet."}</p>
+          {!company?.support_email && !companyUrlLabel ? <p><Mail size={16} /> <a href="mailto:support@kalitactical.ke">support@kalitactical.ke</a></p> : null}
+          {primaryStore?.hours ? <p>{formatStoreHours(primaryStore)}</p> : null}
           <div className="socials">
             <Camera />
             <MessageSquare />
